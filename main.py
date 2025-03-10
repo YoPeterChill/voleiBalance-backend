@@ -1,12 +1,11 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import text
-from database import engine, Base, get_db, init_db  # Agora `init_db` realmente existe!
-from schemas import PlayerCreate 
+from database import engine, Base, get_db, init_db
+from schemas import PlayerCreate
 from models import Player
 from crud import create_player, get_players, get_player_by_id, update_player_skill, delete_player
 from crud import create_checkin, get_checkins
-
 
 app = FastAPI()
 
@@ -31,6 +30,7 @@ def add_player(player: PlayerCreate, db: Session = Depends(get_db)):
 def list_players(db: Session = Depends(get_db)):
     return get_players(db)
 
+# Buscar um jogador por ID
 @app.get("/players/{player_id}")
 def get_player(player_id: int, db: Session = Depends(get_db)):
     player = get_player_by_id(db, player_id)
@@ -38,6 +38,7 @@ def get_player(player_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Jogador não encontrado")
     return player
 
+# Atualizar nível de habilidade de um jogador
 @app.put("/players/{player_id}")
 def update_skill(player_id: int, new_skill_level: float, db: Session = Depends(get_db)):
     if new_skill_level < 0 or new_skill_level > 5:
@@ -55,20 +56,12 @@ def remove_player(player_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Jogador não encontrado")
     return {"message": "Jogador removido com sucesso"}
 
+# Endpoint principal
 @app.get("/")
 def read_root():
     return {"message": "API do Vôlei Balance está rodando!"}
 
-# Endpoint para testar conexão com o banco de dados
-@app.get("/test-db")
-def test_db_connection(db: Session = Depends(get_db)):
-    try:
-        db.execute(text("SELECT 1"))  # Correção aplicada
-        return {"message": "Conexão com o banco de dados bem-sucedida!"}
-    except Exception as e:
-        return {"error": str(e)}
-    
-    # Endpoint para um jogador fazer check-in
+# ✅ Endpoint para um jogador fazer check-in
 @app.post("/checkin/{player_id}")
 def player_checkin(player_id: int, db: Session = Depends(get_db)):
     checkin = create_checkin(db, player_id)
@@ -76,8 +69,19 @@ def player_checkin(player_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Jogador já fez check-in hoje.")
     return {"message": "Check-in realizado com sucesso"}
 
-# Endpoint para listar todos os check-ins de hoje
+# ✅ Endpoint para listar todos os check-ins de hoje
 @app.get("/checkins/")
 def list_checkins(db: Session = Depends(get_db)):
     checkins = get_checkins(db)
     return checkins
+
+# Endpoint para testar conexão com o banco de dados
+@app.get("/test-db")
+def test_db_connection(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {"message": "Conexão com o banco de dados bem-sucedida!"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
