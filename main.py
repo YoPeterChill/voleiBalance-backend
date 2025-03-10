@@ -48,13 +48,18 @@ def update_skill(player_id: int, new_skill_level: float, db: Session = Depends(g
         raise HTTPException(status_code=404, detail="Jogador não encontrado")
     return player
 
-# Deletar um jogador
 @app.delete("/players/{player_id}")
 def remove_player(player_id: int, db: Session = Depends(get_db)):
     player = delete_player(db, player_id)
-    if not player:
+
+    if player is None:
         raise HTTPException(status_code=404, detail="Jogador não encontrado")
+    
+    if isinstance(player, dict) and "error" in player:
+        raise HTTPException(status_code=400, detail=player["error"])
+
     return {"message": "Jogador removido com sucesso"}
+
 
 # Endpoint principal
 @app.get("/")

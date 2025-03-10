@@ -29,11 +29,19 @@ def update_player_skill(db: Session, player_id: int, new_skill_level: float):
 
 # Deletar um jogador
 def delete_player(db: Session, player_id: int):
+    # Verificar se o jogador tem check-ins registrados
+    has_checkins = db.query(Checkin).filter(Checkin.player_id == player_id).first()
+    if has_checkins:
+        return {"error": "Não é possível excluir o jogador, pois ele tem check-ins registrados."}
+
     player = db.query(Player).filter(Player.id == player_id).first()
-    if player:
-        db.delete(player)
-        db.commit()
+    if not player:
+        return None  # Retorna None se o jogador não existir
+
+    db.delete(player)
+    db.commit()
     return player
+
 
 # Registrar um check-in
 def create_checkin(db: Session, player_id: int):
