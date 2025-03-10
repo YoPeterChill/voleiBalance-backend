@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from models import Player
+from models import Player, Checkin
 from sqlalchemy.sql import func
 
 # Criar um jogador

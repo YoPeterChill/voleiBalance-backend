@@ -1,0 +1,8 @@
+Startar o backend
+- uvicorn main:app --reload
+
+Debug: 
+- uvicorn main:app --reload --log-level debug
+
+ativar a Venv:
+- venv\Scripts\activate
