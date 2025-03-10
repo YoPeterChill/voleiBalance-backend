@@ -37,6 +37,11 @@ def delete_player(db: Session, player_id: int):
 
 # Registrar um check-in
 def create_checkin(db: Session, player_id: int):
+    # Verificar se o jogador existe antes de criar o check-in
+    player = db.query(Player).filter(Player.id == player_id).first()
+    if not player:
+        return {"error": "Jogador não encontrado"}
+
     # Verifica se o jogador já fez check-in hoje
     existing_checkin = db.query(Checkin).filter(
         Checkin.player_id == player_id,
@@ -46,6 +51,7 @@ def create_checkin(db: Session, player_id: int):
     if existing_checkin:
         return None  # Retorna None se o jogador já fez check-in hoje
 
+    # Criar check-in garantindo que o player_id seja válido
     checkin = Checkin(player_id=player_id)
     db.add(checkin)
     db.commit()

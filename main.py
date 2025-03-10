@@ -65,9 +65,15 @@ def read_root():
 @app.post("/checkin/{player_id}")
 def player_checkin(player_id: int, db: Session = Depends(get_db)):
     checkin = create_checkin(db, player_id)
+    
     if checkin is None:
         raise HTTPException(status_code=400, detail="Jogador já fez check-in hoje.")
+    
+    if isinstance(checkin, dict) and "error" in checkin:
+        raise HTTPException(status_code=404, detail=checkin["error"])
+
     return {"message": "Check-in realizado com sucesso"}
+
 
 # ✅ Endpoint para listar todos os check-ins de hoje
 @app.get("/checkins/")
