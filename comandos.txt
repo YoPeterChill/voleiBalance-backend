@@ -6,3 +6,8 @@ Debug:
 
 ativar a Venv:
 - venv\Scripts\activate
+
+
+To-do: tratamento de erro para haver apenas 6 em cada time.
+- prioridade para ordem de checkin
+- verificar se quem esta de reserva, não pode estar jogando!
