@@ -1,6 +1,70 @@
 from sqlalchemy.orm import Session
 from models import Player, Checkin
 from sqlalchemy.sql import func
+import random
+
+# Definir o número mínimo de jogadores para formar dois times
+MIN_PLAYERS = 12
+MAX_PLAYERS_PER_TEAM = 6
+
+def balance_teams(db: Session):
+    # Obter jogadores que fizeram check-in
+    checkins = db.query(Checkin).all()
+    if len(checkins) < MIN_PLAYERS:
+        return {"error": "Jogadores insuficientes para formar dois times."}
+
+    # Recuperar os jogadores a partir dos check-ins
+    players = [db.query(Player).filter(Player.id == checkin.player_id).first() for checkin in checkins]
+
+    # Embaralhar os jogadores aleatoriamente
+    random.shuffle(players)
+
+    # Dividir jogadores aleatoriamente em dois times
+    team_a, team_b = [], []
+    for i, player in enumerate(players):
+        (team_a if i % 2 == 0 else team_b).append(player)
+
+    # Ajustar os times até que fiquem equilibrados
+    def team_weight(team):
+        return sum(player.skill_level for player in team)
+
+    while abs(team_weight(team_a) - team_weight(team_b)) > 1.0:
+        # Trocar jogadores aleatórios para balancear
+        if team_weight(team_a) > team_weight(team_b):
+            stronger_team, weaker_team = team_a, team_b
+        else:
+            stronger_team, weaker_team = team_b, team_a
+
+        player_to_swap = random.choice(stronger_team)
+        stronger_team.remove(player_to_swap)
+        weaker_team.append(player_to_swap)
+
+    # Lidar com jogadores extras
+    extra_players = len(players) - (MAX_PLAYERS_PER_TEAM * 2)
+    reserves = []
+    third_team = []
+
+    if extra_players > 0:
+        if extra_players <= 6:
+            # Selecionar reservas aleatoriamente
+            reserves = random.sample(players, extra_players)
+        else:
+            # Criar um terceiro time
+            third_team = players[-extra_players:]
+
+    return {
+        "team_a": [{"id": p.id, "name": p.name, "skill": p.skill_level} for p in team_a],
+        "team_b": [{"id": p.id, "name": p.name, "skill": p.skill_level} for p in team_b],
+        "reserves": [{"id": p.id, "name": p.name, "skill": p.skill_level} for p in reserves] if reserves else None,
+        "third_team": [{"id": p.id, "name": p.name, "skill": p.skill_level} for p in third_team] if third_team else None,
+    }
+
+
+
+
+
+
+
 
 # Criar um jogador
 def create_player(db: Session, name: str, skill_level: float):

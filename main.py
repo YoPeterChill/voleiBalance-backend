@@ -6,6 +6,7 @@ from schemas import PlayerCreate
 from models import Player
 from crud import create_player, get_players, get_player_by_id, update_player_skill, delete_player
 from crud import create_checkin, get_checkins
+from crud import balance_teams
 
 app = FastAPI()
 
@@ -85,6 +86,13 @@ def player_checkin(player_id: int, db: Session = Depends(get_db)):
 def list_checkins(db: Session = Depends(get_db)):
     checkins = get_checkins(db)
     return checkins
+
+@app.get("/balance-teams/")
+def get_balanced_teams(db: Session = Depends(get_db)):
+    teams = balance_teams(db)
+    if "error" in teams:
+        raise HTTPException(status_code=400, detail=teams["error"])
+    return teams
 
 # Endpoint para testar conexão com o banco de dados
 @app.get("/test-db")
