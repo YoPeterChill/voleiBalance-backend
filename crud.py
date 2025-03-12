@@ -7,6 +7,7 @@ import random
 MIN_PLAYERS = 12
 MAX_PLAYERS_PER_TEAM = 6
 
+
 def balance_teams(db: Session):
     # Obter jogadores que fizeram check-in
     checkins = db.query(Checkin).all()
@@ -14,7 +15,10 @@ def balance_teams(db: Session):
         return {"error": "Jogadores insuficientes para formar dois times."}
 
     # Recuperar os jogadores a partir dos check-ins
-    players = [db.query(Player).filter(Player.id == checkin.player_id).first() for checkin in checkins]
+    players = [
+        db.query(Player).filter(Player.id == checkin.player_id).first()
+        for checkin in checkins
+    ]
 
     # Embaralhar os jogadores aleatoriamente
     random.shuffle(players)
@@ -53,17 +57,23 @@ def balance_teams(db: Session):
             third_team = players[-extra_players:]
 
     return {
-        "team_a": [{"id": p.id, "name": p.name, "skill": p.skill_level} for p in team_a],
-        "team_b": [{"id": p.id, "name": p.name, "skill": p.skill_level} for p in team_b],
-        "reserves": [{"id": p.id, "name": p.name, "skill": p.skill_level} for p in reserves] if reserves else None,
-        "third_team": [{"id": p.id, "name": p.name, "skill": p.skill_level} for p in third_team] if third_team else None,
+        "team_a": [
+            {"id": p.id, "name": p.name, "skill": p.skill_level} for p in team_a
+        ],
+        "team_b": [
+            {"id": p.id, "name": p.name, "skill": p.skill_level} for p in team_b
+        ],
+        "reserves": (
+            [{"id": p.id, "name": p.name, "skill": p.skill_level} for p in reserves]
+            if reserves
+            else None
+        ),
+        "third_team": (
+            [{"id": p.id, "name": p.name, "skill": p.skill_level} for p in third_team]
+            if third_team
+            else None
+        ),
     }
-
-
-
-
-
-
 
 
 # Criar um jogador
@@ -74,13 +84,16 @@ def create_player(db: Session, name: str, skill_level: float):
     db.refresh(player)
     return player
 
+
 # Buscar todos os jogadores
 def get_players(db: Session):
     return db.query(Player).all()
 
+
 # Buscar um jogador por ID
 def get_player_by_id(db: Session, player_id: int):
     return db.query(Player).filter(Player.id == player_id).first()
+
 
 # Atualizar nível de habilidade de um jogador
 def update_player_skill(db: Session, player_id: int, new_skill_level: float):
@@ -91,12 +104,15 @@ def update_player_skill(db: Session, player_id: int, new_skill_level: float):
         db.refresh(player)
     return player
 
+
 # Deletar um jogador
 def delete_player(db: Session, player_id: int):
     # Verificar se o jogador tem check-ins registrados
     has_checkins = db.query(Checkin).filter(Checkin.player_id == player_id).first()
     if has_checkins:
-        return {"error": "Não é possível excluir o jogador, pois ele tem check-ins registrados."}
+        return {
+            "error": "Não é possível excluir o jogador, pois ele tem check-ins registrados."
+        }
 
     player = db.query(Player).filter(Player.id == player_id).first()
     if not player:
@@ -115,10 +131,14 @@ def create_checkin(db: Session, player_id: int):
         return {"error": "Jogador não encontrado"}
 
     # Verifica se o jogador já fez check-in hoje
-    existing_checkin = db.query(Checkin).filter(
-        Checkin.player_id == player_id,
-        func.date(Checkin.timestamp) == func.current_date()
-    ).first()
+    existing_checkin = (
+        db.query(Checkin)
+        .filter(
+            Checkin.player_id == player_id,
+            func.date(Checkin.timestamp) == func.current_date(),
+        )
+        .first()
+    )
 
     if existing_checkin:
         return None  # Retorna None se o jogador já fez check-in hoje
@@ -130,7 +150,11 @@ def create_checkin(db: Session, player_id: int):
     db.refresh(checkin)
     return checkin
 
+
 # Listar todos os jogadores que fizeram check-in hoje
 def get_checkins(db: Session):
-    return db.query(Checkin).filter(func.date(Checkin.timestamp) == func.current_date()).all()
-
+    return (
+        db.query(Checkin)
+        .filter(func.date(Checkin.timestamp) == func.current_date())
+        .all()
+    )

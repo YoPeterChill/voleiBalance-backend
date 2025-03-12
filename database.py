@@ -21,6 +21,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 # Base para os modelos ORM
 Base = declarative_base()
 
+
 # Função para obter a sessão do banco
 def get_db():
     db = SessionLocal()
@@ -29,7 +30,10 @@ def get_db():
     finally:
         db.close()
 
-def init_db():
-    from models import Base  # Importa a base para garantir a criação de todas as tabelas
-    Base.metadata.create_all(bind=engine)
 
+def init_db():
+    from models import (
+        Base,
+    )  # Importa a base para garantir a criação de todas as tabelas
+
+    Base.metadata.create_all(bind=engine)
